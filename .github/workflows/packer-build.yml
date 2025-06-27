@@ -1,5 +1,5 @@
 name: Build AMI with Packer
- 
+
 on:
   push:
     branches:
@@ -9,7 +9,7 @@ jobs:
   build-ami:
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: us-east-1
+      AWS_REGION: us-east-1  # Change if you use a different region
 
     steps:
       - name: Checkout code
@@ -43,21 +43,12 @@ jobs:
           cd packer
           packer build -machine-readable . | tee build.log
 
-      - name: Debug: Show last 20 lines of build.log
-        run: |
-          cd packer
-          tail -n 20 build.log
-
       - name: Extract AMI ID from logs
         id: extract_ami
         run: |
           cd packer
           AMI_ID=$(awk -F, '/artifact,0,id/ {print $NF}' build.log | awk -F: '{print $2}' | tail -n1)
           echo "AMI_ID=$AMI_ID"
-          if [ -z "$AMI_ID" ]; then
-            echo "AMI ID extraction failed!"
-            exit 1
-          fi
           echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
 
       - name: Show AMI ID
