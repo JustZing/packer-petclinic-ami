@@ -37,17 +37,18 @@ jobs:
           packer validate .
 
       - name: Build AMI with Packer and save logs
-        id: packer_build
+        id: build_ami
         run: |
           cd packer
           packer build -machine-readable . | tee build.log
 
-      - name: Extract AMI ID from build logs
+      - name: Extract AMI ID from logs
         id: extract_ami
         run: |
           cd packer
-          AMI_ID=$(grep 'artifact,0,id' build.log | head -n1 | cut -d, -f6 | cut -d: -f2)
-          echo "AMI_ID=$AMI_ID" > $GITHUB_OUTPUT
+          AMI_ID=$(grep 'artifact,0,id' build.log | head -n 1 | cut -d, -f6 | cut -d: -f2)
+          echo "AMI_ID=$AMI_ID"
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
 
       - name: Show AMI ID
-        run: echo "Built AMI ID: ${{ steps.extract_ami.outputs.AMI_ID }}"
+        run: echo "Built AMI ID is ${{ env.AMI_ID }}"
