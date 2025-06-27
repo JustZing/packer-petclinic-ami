@@ -8,11 +8,11 @@ source "amazon-ebs" "petclinic" {
       root-device-type    = "ebs"
     }
     most_recent = true
-    owners      = ["354918380509"]
+    owners      = ["137112412989"]
   }
 
   instance_type = "t2.micro"
   ssh_username  = "ec2-user"
-  ami_name      = "${var.ami_name}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
+  ami_name      = "petclinic-ami-${formatdate("YYYYMMDDhhmmss", timestamp())}"
 }
 
