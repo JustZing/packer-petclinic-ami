@@ -42,6 +42,11 @@ jobs:
           cd packer
           packer build -machine-readable . | tee build.log
 
+      - name: Debug: Show last 20 lines of build.log
+        run: |
+          cd packer
+          tail -n 20 build.log
+
       - name: Extract AMI ID from logs
         id: extract_ami
         run: |
