@@ -20,3 +20,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v3
+        with:
+          version: '1.10.2'
+
+      - name: Initialize Packer
+        run: |
+          cd packer
+          packer init .
+
+      - name: Validate Packer templates
+        run: |
+          cd packer
+          packer validate .
+
+      - name: Build AMI with Packer and save logs
+        id: packer_build
+        run: |
+          cd packer
+          packer build -machine-readable . | tee build.log
+
+      - name: Extract AMI ID from build logs
+        id: extract_ami
+        run: |
+          cd packer
+          AMI_ID=$(grep 'artifact,0,id' build.log | head -n1 | cut -d, -f6 | cut -d: -f2)
+          echo "AMI_ID=$AMI_ID" > $GITHUB_OUTPUT
+
+      - name: Show AMI ID
+        run: echo "Built AMI ID: ${{ steps.extract_ami.outputs.AMI_ID }}"
