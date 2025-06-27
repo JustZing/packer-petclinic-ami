@@ -1,0 +1,53 @@
+name: Build AMI with Packer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packer/**'
+      - '.github/workflows/packer-build.yml'
+
+jobs:
+  packer-build:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v3
+        with:
+          version: '1.10.2'
+
+      - name: Initialize Packer
+        run: |
+          cd packer
+          packer init .
+
+      - name: Validate Packer templates
+        run: |
+          cd packer
+          packer validate .
+
+      - name: Build AMI with Packer
+        run: |
+          cd packer
+          packer build -color=false .
+
+      - name: Extract AMI ID from logs
+        id: extract_ami
+        run: |
+          cd packer
+          AMI_ID=$(packer build -machine-readable . | grep 'artifact,0,id' | cut -d, -f6)
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_OUTPUT
+
+      - name: Show AMI ID
+        run: echo "Built AMI ID: ${{ steps.extract_ami.outputs.AMI_ID }}"
+
