@@ -14,6 +14,6 @@ source "amazon-ebs" "petclinic" {
   instance_type = "t2.micro"
   ssh_username  = "ec2-user"
   ami_name      = "${var.ami_name}-${timestamp()}"
-"
 }
+
 
