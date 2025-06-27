@@ -1,3 +1,14 @@
+  name: Build AMI with Packer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ami:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1  
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -6,6 +17,13 @@
         uses: hashicorp/setup-packer@v3
         with:
           version: '1.10.2'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Initialize Packer
         run: |
@@ -32,10 +50,14 @@
         id: extract_ami
         run: |
           cd packer
-          AMI_ID=$(grep 'artifact,0,id' build.log | head -n 1 | cut -d, -f6 | cut -d: -f2)
+          # Extract the last AMI ID from the log in a robust way
+          AMI_ID=$(awk -F, '/artifact,0,id/ {print $NF}' build.log | awk -F: '{print $2}' | tail -n1)
           echo "AMI_ID=$AMI_ID"
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          if [ -z "$AMI_ID" ]; then
+            echo "AMI ID extraction failed!"
+            exit 1
+          fi
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
 
       - name: Show AMI ID
-        run: echo "Built AMI ID is ${{ env.AMI_ID }}"
-
+        run: echo "Built AMI ID is ${{ steps.extract_ami.outputs.ami_id }}"
