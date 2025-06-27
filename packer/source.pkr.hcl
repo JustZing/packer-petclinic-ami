@@ -7,7 +7,7 @@ source "amazon-ebs" "petclinic" {
       root-device-type    = "ebs"
     }
     most_recent = true
-    owners      = ["137112412989"]  # Correct AWS Amazon Linux 2 owner ID
+    owners      = ["354918380509"]  
   }
   instance_type = "t2.micro"
   ssh_username  = "ec2-user"
