@@ -1,22 +1,3 @@
-name: Build AMI with Packer
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'packer/**'
-      - '.github/workflows/packer-build.yml'
-
-jobs:
-  packer-build:
-    runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,3 +38,4 @@ jobs:
 
       - name: Show AMI ID
         run: echo "Built AMI ID is ${{ env.AMI_ID }}"
+
