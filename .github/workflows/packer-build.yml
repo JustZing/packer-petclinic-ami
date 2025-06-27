@@ -1,13 +1,15 @@
-  name: Build AMI with Packer
-
+ name: Build AMI with Packer
+ 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build-ami:
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: us-east-1  
+      AWS_REGION: us-east-1
 
     steps:
       - name: Checkout code
@@ -50,7 +52,6 @@ jobs:
         id: extract_ami
         run: |
           cd packer
-          # Extract the last AMI ID from the log in a robust way
           AMI_ID=$(awk -F, '/artifact,0,id/ {print $NF}' build.log | awk -F: '{print $2}' | tail -n1)
           echo "AMI_ID=$AMI_ID"
           if [ -z "$AMI_ID" ]; then
