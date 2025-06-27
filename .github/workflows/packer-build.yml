@@ -1,3 +1,19 @@
+name: Build AMI with Packer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packer/**'
+      - '.github/workflows/packer-build.yml'
+
+jobs:
+  build-ami:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -7,35 +23,41 @@
         with:
           version: '1.10.2'
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Initialize Packer
         run: |
           cd packer
           packer init .
 
-      - name: Validate Packer templates
+      - name: Validate Packer Template
         run: |
           cd packer
           packer validate .
 
-      - name: Build AMI with Packer and save logs
-        id: build_ami
+      - name: Build AMI and save logs
+        id: packer_build
         run: |
           cd packer
           packer build -machine-readable . | tee build.log
 
-      - name: Debug: Show last 20 lines of build.log
+      - name: Show build.log preview
         run: |
           cd packer
-          tail -n 20 build.log
+          head -n 40 build.log
 
-      - name: Extract AMI ID from logs
+      - name: Extract AMI ID
         id: extract_ami
         run: |
           cd packer
-          AMI_ID=$(grep 'artifact,0,id' build.log | head -n 1 | cut -d, -f6 | cut -d: -f2)
+          AMI_ID=$(grep 'artifact,0,id' build.log | tail -n1 | cut -d, -f6 | cut -d: -f2)
           echo "AMI_ID=$AMI_ID"
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
 
-      - name: Show AMI ID
-        run: echo "Built AMI ID is ${{ env.AMI_ID }}"
-
+      - name: Show extracted AMI ID
+        run: echo "Built AMI ID is ${{ steps.extract_ami.outputs.ami_id }}"
